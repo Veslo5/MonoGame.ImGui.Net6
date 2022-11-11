@@ -134,6 +134,10 @@ public class ImGuiRenderer
             {
                 var drawCommand = commandList.CmdBuffer[commandIndex];
 
+                if(drawCommand.ElemCount == 0){
+                    continue;
+                }
+
                 if (!_textureData.Loaded.ContainsKey(drawCommand.TextureId))
                     throw new MissingLoadedTextureKeyException(drawCommand.TextureId);
 
@@ -146,9 +150,9 @@ public class ImGuiRenderer
                     DrawPrimitives(vertexOffset, indexOffset, commandList, drawCommand);
                 }
 
-                indexOffset += (int)drawCommand.ElemCount;
             }
 
+            indexOffset += commandList.IdxBuffer.Size;
             vertexOffset += commandList.VtxBuffer.Size;
         }
     }
@@ -170,8 +174,12 @@ public class ImGuiRenderer
 #pragma warning disable CS0618
 
         GraphicsDevice.DrawIndexedPrimitives(
-            PrimitiveType.TriangleList, vertexOffset, 0,
-            commandList.VtxBuffer.Size, indexOffset, (int)(drawCommand.ElemCount / 3));
+            PrimitiveType.TriangleList,
+            (int)drawCommand.VtxOffset + vertexOffset,
+            0,
+            commandList.VtxBuffer.Size,
+            (int)drawCommand.IdxOffset + indexOffset,
+            (int)(drawCommand.ElemCount / 3));
 
 
 #pragma warning restore CS0618
